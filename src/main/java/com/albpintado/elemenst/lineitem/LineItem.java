@@ -28,8 +28,7 @@ public class LineItem {
     private LineList lineList;
 
     @Column(name = "content", nullable = false)
-    @Size(min = 1, message = "{validation.name.size.too_short}")
-    @Size(max = 25, message = "{validation.name.size.too_long}")
+    @Size(min = 1, max = 75, message = "Content value must be between {min} and {max} characters long")
     private String content;
 
     @Column(name = "is_completed", nullable = false, columnDefinition = "boolean default false")
