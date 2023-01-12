@@ -6,11 +6,17 @@ public class LineListDto {
 
     private String creationDate;
 
+    private Long userId;
+
     public String getName() {
         return name;
     }
 
     public String getCreationDate() {
         return creationDate;
+    }
+
+    public Long getUserId() {
+        return userId;
     }
 }

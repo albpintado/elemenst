@@ -1,6 +1,7 @@
 package com.albpintado.elemenst.linelist;
 
 import com.albpintado.elemenst.lineitem.LineItem;
+import com.albpintado.elemenst.user.User;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.time.LocalDate;
 import java.util.Date;
@@ -11,10 +12,14 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
+import javax.persistence.Table;
 import javax.validation.constraints.Size;
 
 @Entity
+@Table(name = "line_lists")
 public class LineList {
 
     @Id
@@ -32,6 +37,10 @@ public class LineList {
     @OneToMany(mappedBy = "lineList", cascade = CascadeType.REMOVE)
     @JsonIgnore
     private List<LineItem> lineItemList;
+
+    @ManyToOne
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
     public LineList() {
     }
@@ -79,5 +88,13 @@ public class LineList {
 
     public void setLineItemList(List<LineItem> lineItemList) {
         this.lineItemList = lineItemList;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
     }
 }
