@@ -1,8 +1,14 @@
 package com.albpintado.elemenst.user;
 
 import com.albpintado.elemenst.exception.ExistingUserNameException;
+import com.albpintado.elemenst.exception.InvalidPassword;
 import com.sun.scenario.effect.impl.sw.sse.SSEBlend_SRC_OUTPeer;
+import java.util.ArrayList;
+import javax.validation.ConstraintViolation;
+import javax.validation.ConstraintViolationException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -26,12 +32,30 @@ public class UserController {
         return this.userService.getCurrent();
     }
 
+    @ExceptionHandler({ConstraintViolationException.class, DataIntegrityViolationException.class})
+    public ResponseEntity<Object> handleConstraintViolation(ConstraintViolationException ex) {
+        List<String> errors = new ArrayList<>();
+        for (ConstraintViolation<?> violation : ex.getConstraintViolations()) {
+            errors.add(violation.getMessage());
+        }
+        return new ResponseEntity<>(errors, HttpStatus.UNPROCESSABLE_ENTITY);
+    }
+
+    @ExceptionHandler(InvalidPassword.class)
+    public ResponseEntity<Object> handleConstraintViolation(InvalidPassword ex) {
+        List<String> errors = new ArrayList<>();
+        errors.add(ex.getMessage());
+        return new ResponseEntity<>(errors, HttpStatus.UNPROCESSABLE_ENTITY);
+    }
+
     @PostMapping
-    public ResponseEntity<User> createOne(@RequestBody UserDto userDto) throws ExistingUserNameException {
+    public ResponseEntity<User> createOne(@RequestBody UserDto userDto)
+            throws ExistingUserNameException, InvalidPassword {
       if (isPasswordValid(userDto.getPassword())) {
-        return this.userService.create(userDto);
+          return this.userService.create(userDto);
       }
-      return null;
+      throw new InvalidPassword("Password must have between 8 and 18 characters and include at least one uppercase letter, one lowercase letter, one number and one special character");
+//      return new ResponseEntity<>(null, HttpStatus.UNPROCESSABLE_ENTITY);
     }
 
     @PutMapping()
