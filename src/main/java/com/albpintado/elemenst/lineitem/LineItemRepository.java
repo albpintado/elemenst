@@ -8,4 +8,5 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface LineItemRepository extends JpaRepository<LineItem, Long> {
     public List<LineItem> findAllByLineListId(Long id, Sort sort);
+    public List<LineItem> findAllByLineListUserId(Long lineListUserId, Sort sort);
 }
