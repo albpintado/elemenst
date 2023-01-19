@@ -4,7 +4,6 @@ import com.albpintado.elemenst.linelist.LineList;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.util.List;
 import javax.persistence.*;
-import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
 
 @Entity
@@ -58,5 +57,14 @@ public class User {
 
     public void setLineLists(List<LineList> lineLists) {
         this.lineLists = lineLists;
+    }
+
+    @Override
+    public String toString() {
+        return "User{" +
+                "id=" + id +
+                ", userName='" + userName + '\'' +
+                ", lineLists=" + lineLists +
+                '}';
     }
 }

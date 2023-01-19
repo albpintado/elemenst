@@ -1,14 +1,11 @@
 package com.albpintado.elemenst.user;
 
-import static org.springframework.security.web.context.HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY;
-
-import com.albpintado.elemenst.config.TokenManager;
+import com.albpintado.elemenst.exception.ExceptionMessages;
 import com.albpintado.elemenst.exception.ExistingUserNameException;
-import javax.servlet.http.HttpSession;
+import com.albpintado.elemenst.exception.InvalidPassword;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -24,8 +21,8 @@ public class UserService {
 
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
-    public List<User> getAll() {
-        return this.userRepository.findAll();
+    public ResponseEntity<List<User>> getAll() {
+        return new ResponseEntity<>(this.userRepository.findAll(), HttpStatus.OK);
     }
 
     public ResponseEntity<User> getCurrent() {
@@ -34,29 +31,31 @@ public class UserService {
         if (user != null) {
             return new ResponseEntity<>(user, HttpStatus.OK);
         }
-        return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+        return new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
 
-    public ResponseEntity<User> create(UserDto userDto) throws ExistingUserNameException {
+    public ResponseEntity<User> create(UserDto userDto) throws ExistingUserNameException, InvalidPassword {
         User user = createUserEntity(userDto);
-        this.userRepository.save(user);
-        return new ResponseEntity<>(user, HttpStatus.CREATED);
+        return new ResponseEntity<>(this.userRepository.save(user), HttpStatus.CREATED);
     }
 
-    private User createUserEntity(UserDto userDto) throws ExistingUserNameException {
+    private User createUserEntity(UserDto userDto) throws ExistingUserNameException, InvalidPassword {
         if (userNameExists(userDto.getUserName())) {
             throw new ExistingUserNameException
                     ("Username " + userDto.getUserName() + " already exists.");
         }
         User user = new User();
         user.setUserName(userDto.getUserName());
-        user.setPassword(passwordEncoder.encode(userDto.getPassword()));
-        return user;
+        if (isPasswordValid(userDto.getPassword())) {
+            user.setPassword(passwordEncoder.encode(userDto.getPassword()));
+            return user;
+        }
+        throw new InvalidPassword(ExceptionMessages.INVALID_PASSWORD.getMessage());
     }
 
     private boolean userNameExists(String userName) {
-      Optional<User> optionalUser = this.userRepository.findOneByUserName(userName);
-      return optionalUser.isPresent();
+        Optional<User> optionalUser = this.userRepository.findOneByUserName(userName);
+        return optionalUser.isPresent();
     }
 
     public ResponseEntity<User> update(UserDto userDto) {
@@ -72,7 +71,7 @@ public class UserService {
 
             return new ResponseEntity<>(user, HttpStatus.OK);
         }
-        return new ResponseEntity<>(null, HttpStatus.NO_CONTENT);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
     public ResponseEntity<Object> delete() {
@@ -81,13 +80,20 @@ public class UserService {
             this.userRepository.delete(user);
             SecurityContextHolder.clearContext();
             SecurityContextHolder.getContext().setAuthentication(null);
+
+            return new ResponseEntity<>(HttpStatus.OK);
         }
-        return new ResponseEntity<>(null, HttpStatus.NO_CONTENT);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
     private User getUserByUserName() {
         String contextUserName = SecurityContextHolder.getContext().getAuthentication().getPrincipal().toString();
         Optional<User> optionalLineList = userRepository.findOneByUserName(contextUserName);
         return optionalLineList.orElse(null);
+    }
+
+    private boolean isPasswordValid(String password) {
+        String pattern = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&+=])(?=\\S+$).{8,}$";
+        return password.length() > 7 && password.length() < 19 && password.matches(pattern);
     }
 }

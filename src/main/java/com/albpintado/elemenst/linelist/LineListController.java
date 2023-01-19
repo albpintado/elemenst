@@ -6,14 +6,10 @@ import com.albpintado.elemenst.user.User;
 import com.albpintado.elemenst.user.UserRepository;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
-import javax.validation.ConstraintViolation;
-import javax.validation.ConstraintViolationException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.http.HttpStatus;
@@ -21,7 +17,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -66,15 +61,6 @@ public class LineListController {
             return new ResponseEntity<>(userLineLists, HttpStatus.OK);
         }
         return new ResponseEntity<>(null, HttpStatus.NO_CONTENT);
-    }
-
-    @ExceptionHandler({ConstraintViolationException.class, DataIntegrityViolationException.class})
-    public ResponseEntity<Object> handleConstraintViolation(ConstraintViolationException ex) {
-        List<String> errors = new ArrayList<>();
-        for (ConstraintViolation<?> violation : ex.getConstraintViolations()) {
-            errors.add(violation.getMessage());
-        }
-        return new ResponseEntity<>(errors, HttpStatus.UNPROCESSABLE_ENTITY);
     }
 
     @PostMapping
